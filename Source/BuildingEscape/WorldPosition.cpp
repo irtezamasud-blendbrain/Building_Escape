@@ -3,11 +3,14 @@
 
 #include "WorldPosition.h"
 
+#include "Engine/TriggerVolume.h"
+
 // Sets default values for this component's properties
 UWorldPosition::UWorldPosition()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 }
+
 
 // Called when the game starts
 void UWorldPosition::BeginPlay()
@@ -16,12 +19,12 @@ void UWorldPosition::BeginPlay()
 
 	InitialYaw = GetOwner()->GetActorRotation().Yaw;
 	CurrentYaw = InitialYaw;
-	TargetYaw = InitialYaw + TargetYaw;
-	// FString ObjectName = GetOwner()->GetActorLabel();
-	// FString ObjectLocation = GetOwner()->GetActorLocation().ToString();
-	//
-	// UE_LOG(LogTemp, Warning, TEXT("%s position in world %s"), *ObjectName, *ObjectLocation);
-
+	OpenAngle = InitialYaw + OpenAngle;
+	if (!DoorTrigger)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Actor %s has no door trigger set"), *GetOwner()->GetActorLabel())
+	}
+	ActorThatOpen = GetWorld()->GetFirstPlayerController()->GetPawn();
 }
 
 
@@ -29,13 +32,37 @@ void UWorldPosition::BeginPlay()
 void UWorldPosition::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	
-	UE_LOG(LogTemp, Warning, TEXT("Door rotation is %f"), GetOwner()->GetActorRotation().Yaw);
-	
-	CurrentYaw=  FMath::Lerp(CurrentYaw, TargetYaw,.02f);
-	FRotator CurrentRotation =  GetOwner()->GetActorRotation();
+	if (ActorThatOpen && DoorTrigger)
+	{
+		if (DoorTrigger->IsOverlappingActor(ActorThatOpen))
+		{
+			OpenDoor(DeltaTime);
+			DoorLastOpened = GetWorld()->GetTimeSeconds();
+		}
+		else
+		{
+			if (GetWorld()->GetTimeSeconds() - DoorLastOpened > DoorCloseDelay)
+			{
+				CloseDoor(DeltaTime);
+			}
+		}
+	}
+}
+
+void UWorldPosition::OpenDoor(float DeltaTime)
+{
+	// UE_LOG(LogTemp, Warning, TEXT("Door rotation is %f"), GetOwner()->GetActorRotation().Yaw);
+
+	CurrentYaw = FMath::Lerp(CurrentYaw, OpenAngle, DeltaTime * DoorOpenSpeed);
+	FRotator CurrentRotation = GetOwner()->GetActorRotation();
 	CurrentRotation.Yaw = CurrentYaw;
 	GetOwner()->SetActorRotation(CurrentRotation);
+}
 
-
+void UWorldPosition::CloseDoor(float DeltaTime)
+{
+	CurrentYaw = FMath::Lerp(CurrentYaw, InitialYaw, DeltaTime * DoorCloseSpeed);
+	FRotator CurrentRotation = GetOwner()->GetActorRotation();
+	CurrentRotation.Yaw = CurrentYaw;
+	GetOwner()->SetActorRotation(CurrentRotation);
 }

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Engine/TriggerVolume.h"
 #include "WorldPosition.generated.h"
 
 
@@ -15,6 +16,8 @@ class BUILDINGESCAPE_API UWorldPosition : public UActorComponent
 public:
 	// Sets default values for this component's properties
 	UWorldPosition();
+	void OpenDoor(float DeltaTime);
+	void CloseDoor(float DeltaTime);
 
 protected:
 	// Called when the game starts
@@ -28,6 +31,24 @@ public:
 private:
 	float InitialYaw;
 	float CurrentYaw;
+
 	UPROPERTY(EditAnywhere)
-	float TargetYaw = 75;
+	AActor* ActorThatOpen;
+
+	UPROPERTY(EditAnywhere)
+	ATriggerVolume* DoorTrigger;
+
+	UPROPERTY(EditAnywhere)
+	float OpenAngle = 75;
+
+	UPROPERTY(EditAnywhere)
+	float DoorOpenSpeed = .5f;
+
+	UPROPERTY(EditAnywhere)
+	float DoorCloseSpeed = 1.0f;
+	
+	float DoorLastOpened = 0.f;
+
+	UPROPERTY(EditAnywhere)
+	float DoorCloseDelay = 2.0f;
 };
