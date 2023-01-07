@@ -26,8 +26,12 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 private:
 	float LineDistance = 150.f;
+	
+	UPROPERTY()
 	UPhysicsHandleComponent* PhysicsHandle = nullptr;
-	UInputComponent* PlayerInput = nullptr;
+	UPROPERTY()
+	UInputComponent* PlayerInput = nullptr; 
+
 
 	void Grab();
 	void Release();

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Components/AudioComponent.h"
 #include "Engine/TriggerVolume.h"
 #include "WorldPosition.generated.h"
 
@@ -27,17 +28,17 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
-	const float TotalMassofActors();
+	const float TotalMassOfActors();
+	const void FindAudioComponent();
+	void FindDoorTrigger();
+	bool DoorSoundPlayed = false;
 
 private:
 	float InitialYaw;
 	float CurrentYaw;
 
 	UPROPERTY(EditAnywhere)
-	AActor* ActorThatOpen;
-
-	UPROPERTY(EditAnywhere)
-	ATriggerVolume* DoorTrigger;
+	ATriggerVolume* DoorTrigger = nullptr;
 
 	UPROPERTY(EditAnywhere)
 	float OpenAngle = 75;
@@ -47,7 +48,7 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float DoorCloseSpeed = 1.0f;
-	
+
 	float DoorLastOpened = 0.f;
 
 	UPROPERTY(EditAnywhere)
@@ -55,4 +56,7 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float DoorTriggerWeight = 50.f;
+
+	UPROPERTY()
+	UAudioComponent* AudioComponent = nullptr;
 };

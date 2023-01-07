@@ -17,15 +17,12 @@ UWorldPosition::UWorldPosition()
 void UWorldPosition::BeginPlay()
 {
 	Super::BeginPlay();
-
 	InitialYaw = GetOwner()->GetActorRotation().Yaw;
 	CurrentYaw = InitialYaw;
 	OpenAngle = InitialYaw + OpenAngle;
-	if (!DoorTrigger)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Actor %s has no door trigger set"), *GetOwner()->GetActorLabel())
-	}
-	ActorThatOpen = GetWorld()->GetFirstPlayerController()->GetPawn();
+
+	FindDoorTrigger();
+	FindAudioComponent();
 }
 
 
@@ -34,28 +31,27 @@ void UWorldPosition::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (ActorThatOpen && DoorTrigger)
+	if (TotalMassOfActors() > DoorTriggerWeight)
 	{
-		if (TotalMassofActors() > DoorTriggerWeight)
+		OpenDoor(DeltaTime);
+		DoorLastOpened = GetWorld()->GetTimeSeconds();
+	}
+	else
+	{
+		if (GetWorld()->GetTimeSeconds() - DoorLastOpened > DoorCloseDelay)
 		{
-			OpenDoor(DeltaTime);
-			DoorLastOpened = GetWorld()->GetTimeSeconds();
-		}
-		else
-		{
-			if (GetWorld()->GetTimeSeconds() - DoorLastOpened > DoorCloseDelay)
-			{
-				CloseDoor(DeltaTime);
-			}
+			CloseDoor(DeltaTime);
 		}
 	}
 }
 
-const float UWorldPosition::TotalMassofActors()
+const float UWorldPosition::TotalMassOfActors()
 {
 	float TotalMass = 0.f;
 
 	TArray<AActor*> OverlappingActors;
+
+	if (!DoorTrigger) { return TotalMass; }
 
 	DoorTrigger->GetOverlappingActors(OverlappingActors);
 	for (AActor* Actor : OverlappingActors)
@@ -73,6 +69,12 @@ void UWorldPosition::OpenDoor(float DeltaTime)
 	FRotator CurrentRotation = GetOwner()->GetActorRotation();
 	CurrentRotation.Yaw = CurrentYaw;
 	GetOwner()->SetActorRotation(CurrentRotation);
+	if (!AudioComponent) { return; }
+	if (!DoorSoundPlayed)
+	{
+		AudioComponent->Play();
+		DoorSoundPlayed = true;
+	}
 }
 
 void UWorldPosition::CloseDoor(float DeltaTime)
@@ -81,4 +83,27 @@ void UWorldPosition::CloseDoor(float DeltaTime)
 	FRotator CurrentRotation = GetOwner()->GetActorRotation();
 	CurrentRotation.Yaw = CurrentYaw;
 	GetOwner()->SetActorRotation(CurrentRotation);
+	if (!AudioComponent) { return; }
+	if (DoorSoundPlayed)
+	{
+		AudioComponent->Play();
+		DoorSoundPlayed = false;
+	}
+}
+
+const void UWorldPosition::FindAudioComponent()
+{
+	AudioComponent = GetOwner()->FindComponentByClass<UAudioComponent>();
+	if (!AudioComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Audio Component is missing"));
+	}
+}
+
+void UWorldPosition::FindDoorTrigger()
+{
+	if (!DoorTrigger)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Actor %s has no door trigger set"), *GetOwner()->GetActorLabel())
+	}
 }
