@@ -5,6 +5,7 @@
 
 #include "Engine/TriggerVolume.h"
 
+#define OUT
 // Sets default values for this component's properties
 UWorldPosition::UWorldPosition()
 {
@@ -32,9 +33,10 @@ void UWorldPosition::BeginPlay()
 void UWorldPosition::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
 	if (ActorThatOpen && DoorTrigger)
 	{
-		if (DoorTrigger->IsOverlappingActor(ActorThatOpen))
+		if (TotalMassofActors() > DoorTriggerWeight)
 		{
 			OpenDoor(DeltaTime);
 			DoorLastOpened = GetWorld()->GetTimeSeconds();
@@ -47,6 +49,20 @@ void UWorldPosition::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 			}
 		}
 	}
+}
+
+const float UWorldPosition::TotalMassofActors()
+{
+	float TotalMass = 0.f;
+
+	TArray<AActor*> OverlappingActors;
+
+	DoorTrigger->GetOverlappingActors(OverlappingActors);
+	for (AActor* Actor : OverlappingActors)
+	{
+		TotalMass += Actor->FindComponentByClass<UPrimitiveComponent>()->GetMass();
+	}
+	return TotalMass;
 }
 
 void UWorldPosition::OpenDoor(float DeltaTime)

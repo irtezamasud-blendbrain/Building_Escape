@@ -27,6 +27,7 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
+	const float TotalMassofActors();
 
 private:
 	float InitialYaw;
@@ -51,4 +52,7 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float DoorCloseDelay = 2.0f;
+
+	UPROPERTY(EditAnywhere)
+	float DoorTriggerWeight = 50.f;
 };
